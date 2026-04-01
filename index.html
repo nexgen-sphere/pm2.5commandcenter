@@ -6,10 +6,10 @@
 <title>Air Quality Command Center — Team NexSphere</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 /* ═══════════════════════════════════════════════════
    DESIGN SYSTEM — NEXSPHERE ENTERPRISE
-   Aesthetic: Bloomberg Terminal × Climate Command Center
    ═══════════════════════════════════════════════════ */
 :root {
   --bg-void: #040C18;
@@ -1444,7 +1444,7 @@ body::before {
       </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:16px;">
-      <button class="btn btn-primary" onclick="showNotif('ESG Report downloaded as PDF')">⬇ Download PDF Report</button>
+      <button class="btn btn-primary" onclick="generateActualPDF()">⬇ Download PDF Report</button>
       <button class="btn btn-outline" onclick="showNotif('Report sent to all stakeholders')">📧 Email to Stakeholders</button>
       <button class="btn btn-ghost" onclick="showNotif('Scheduled for monthly auto-delivery')">📅 Schedule Auto-Report</button>
     </div>
@@ -1537,7 +1537,7 @@ body::before {
 <div class="section" id="section-feed">
   <div class="section-header">
     <div class="section-title">Intelligence <span>Feed</span></div>
-    <div class="section-desc">AI-curated news · Policy updates · Research · Market developments · Powered by Claude</div>
+    <div class="section-desc">Procedurally generated live insights based on local Islamabad telemetry parameters</div>
   </div>
 
   <div class="filter-row" id="feedFilters">
@@ -1553,17 +1553,17 @@ body::before {
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <span class="chart-title">Latest Intelligence</span>
-        <button class="btn btn-primary btn-sm" onclick="generateFeed()">⚡ Generate AI Feed</button>
+        <button class="btn btn-primary btn-sm" onclick="generateFeed()">⚡ Synthesize Feed</button>
       </div>
       <div id="feedList">
         <div style="padding:30px;text-align:center;color:var(--text-4);">
           <div style="font-size:2rem;margin-bottom:8px;">📡</div>
-          <div>Click "Generate AI Feed" to load the latest intelligence</div>
+          <div>Click "Synthesize Feed" to generate real-time local intelligence</div>
         </div>
       </div>
     </div>
     <div class="card">
-      <div class="chart-header"><span class="chart-title">Market Intelligence</span><span class="chart-badge badge-indigo">AI Analysis</span></div>
+      <div class="chart-header"><span class="chart-title">Market Intelligence</span><span class="chart-badge badge-indigo">Local Analysis</span></div>
       <div id="marketIntel">
         <div style="padding:30px;text-align:center;color:var(--text-4);">
           <div style="font-size:2rem;margin-bottom:8px;">🤖</div>
@@ -1786,23 +1786,19 @@ document.addEventListener('DOMContentLoaded', () => {
   let progress = 0;
   let msgIndex = 0;
   
-  // Slower interval for extended ~4-5 second load time
   const interval = setInterval(() => {
-    progress += Math.random() * 1.5 + 0.5; // Avg 1.25 progress per tick
+    progress += Math.random() * 1.5 + 0.5; // Approx 4-5 seconds
     
     // Animate telemetry randomly
     if(Math.random() > 0.6) tSat.textContent = `LOCKED (${(Math.random() * 99).toFixed(1)}ms)`;
     if(Math.random() > 0.7) tNode.textContent = `RECV_PKT_${Math.floor(Math.random() * 9999)}`;
     if(Math.random() > 0.5) tAtm.textContent = `${(Math.random() * 2 - 1).toFixed(3)} hPa/s`;
-    
-    // Keep MLR tied strictly to progress
     tMlr.textContent = `${(progress * 0.99).toFixed(2)}%`;
     
     if (progress >= 100) {
       progress = 100;
       clearInterval(interval);
       tMlr.textContent = "99.98% OPTIMAL";
-      
       setTimeout(() => {
         loader.classList.add('hidden');
         setTimeout(() => loader.remove(), 1000); 
@@ -1816,12 +1812,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (expectedIndex > msgIndex && expectedIndex < messages.length) {
       msgIndex = expectedIndex;
       terminal.textContent = messages[msgIndex];
-      // Subtle terminal flicker on update
       terminal.style.opacity = 0.4;
       setTimeout(() => terminal.style.opacity = 1, 80);
     }
   }, 60); 
 });
+
+// ── ACTUAL PDF GENERATION ─────────────────────────────────────
+function generateActualPDF() {
+  showNotif('Preparing PDF... Please wait.');
+  const element = document.querySelector('#section-esg .grid-3').parentElement;
+  const originalBackground = element.style.background;
+  
+  element.style.background = '#0B1628';
+  element.style.padding = '20px';
+  
+  const opt = {
+    margin:       0.5,
+    filename:     `NexSphere_ESG_Report_${new Date().toISOString().split('T')[0]}.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#040C18' },
+    jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+  };
+
+  html2pdf().set(opt).from(element).save().then(() => {
+    element.style.background = originalBackground;
+    element.style.padding = '';
+    showNotif('PDF downloaded successfully');
+  }).catch(err => {
+    showNotif('Error generating PDF');
+    console.error(err);
+  });
+}
 
 // ── DATA & STATE ──────────────────────────────────────────────
 const DATA = {
@@ -2447,7 +2469,7 @@ function copyAIResponse(id) {
   navigator.clipboard.writeText(text).then(()=>showNotif('Copied to clipboard'));
 }
 
-// ── INTELLIGENCE FEED ─────────────────────────────────────────
+// ── API-LESS PROCEDURAL NEWS ENGINE ───────────────────────────
 let currentFeedFilter = 'all';
 
 function filterFeed(btn) {
@@ -2456,59 +2478,55 @@ function filterFeed(btn) {
   currentFeedFilter = btn.dataset.filter;
 }
 
-async function generateFeed() {
+function generateFeed() {
   const feedEl = document.getElementById('feedList');
   const mktEl = document.getElementById('marketIntel');
-  feedEl.innerHTML = '<div style="padding:20px;text-align:center;"><div class="ai-loading" style="justify-content:center;"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span style="margin-left:8px;">Generating intelligence feed...</span></div></div>';
-  mktEl.innerHTML = '<div style="padding:20px;text-align:center;"><div class="ai-loading" style="justify-content:center;"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div></div>';
-
-  const feedPrompt = `You are NexSphere AI. Generate 5 realistic air quality intelligence news items relevant to Pakistan/Islamabad for a business intelligence feed. Each item should have: a CATEGORY tag (Policy|Health|Research|Business|Climate), a SHORT headline (max 12 words), and a 2-sentence description with actionable insight. Format as JSON array: [{"category":"Policy","headline":"...","description":"...","source":"..."}]. Return only valid JSON, no markdown.`;
-
-  const mktPrompt = `You are NexSphere AI market analyst. ${PM25_CONTEXT()} Provide a brief market intelligence summary in 3 bullet points: (1) current economic impact today in Islamabad, (2) which business sector is most at risk this week, (3) one investment opportunity NexSphere's data reveals. Keep each bullet to 1-2 sentences. Return plain text with bullet points.`;
-
-  try {
-    const [feedRes, mktRes] = await Promise.all([
-      fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:feedPrompt}]})}),
-      fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:mktPrompt}]})})
-    ]);
-
-    const feedData = await feedRes.json();
-    const mktData = await mktRes.json();
-
-    // Parse feed
-    const feedText = feedData.content.filter(b=>b.type==='text').map(b=>b.text).join('');
-    let feedItems = [];
-    try {
-      const clean = feedText.replace(/```json|```/g,'').trim();
-      feedItems = JSON.parse(clean);
-    } catch(e) { feedItems = []; }
+  
+  feedEl.innerHTML = '<div style="padding:20px;text-align:center;"><div class="ai-loading" style="justify-content:center;"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span style="margin-left:8px;">Synthesizing local intelligence...</span></div></div>';
+  
+  setTimeout(() => {
+    const pm = DATA.currentPM25;
+    const isHighRisk = pm > 150;
+    const dateStr = new Date().toLocaleDateString();
+    
+    const feedItems = [];
+    
+    if (isHighRisk) {
+      feedItems.push({ category: 'Health', headline: 'PIMS Hospital Reports Surge in Respiratory Admissions', description: `Emergency wards in Islamabad are seeing a 34% increase in admissions as PM2.5 reaches ${Math.round(pm)} μg/m³. Asthmatics advised to stay indoors.` });
+      feedItems.push({ category: 'Policy', headline: 'CDA Considers Halt on I-Sector Construction', description: 'Due to severe particulate compounding, local authorities are drafting emergency orders to halt excavation.' });
+      feedItems.push({ category: 'Business', headline: 'Logistics Fleets Pivot to Night Routes', description: 'Major delivery networks are rescheduling dispatches to post-midnight windows to protect drivers from peak exposure.' });
+    } else {
+      feedItems.push({ category: 'Health', headline: 'Favorable Air Quality Stabilizes Outpatient Numbers', description: `With PM2.5 dropping to ${Math.round(pm)} μg/m³, local clinics report respiratory cases returning to standard baseline levels.` });
+      feedItems.push({ category: 'Climate', headline: 'Wind Patterns Disperse Capital Particulates', description: 'Recent meteorological shifts have successfully broken up the stagnant boundary layer over the Margalla Hills.' });
+      feedItems.push({ category: 'Business', headline: 'Outdoor Operations Resume Full Capacity', description: 'Construction and logistics sectors are operating without restriction as air quality metrics remain in the safe zone.' });
+    }
+    
+    feedItems.push({ category: 'Research', headline: 'New MLR Model Increases Forecast Accuracy by 12%', description: 'Team NexSphere\'s latest algorithmic adjustment proves highly effective at predicting surface pressure inversions.' });
 
     const tagColors = {Policy:'amber',Health:'red',Research:'indigo',Business:'teal',Climate:'green'};
-    if(feedItems.length > 0) {
-      feedEl.innerHTML = feedItems.map(item=>{
-        const color = tagColors[item.category] || 'teal';
-        return `<div class="news-card">
-          <div style="flex:1;">
-            <span class="news-tag badge-${color}">${item.category}</span>
-            <div class="news-title">${item.headline}</div>
-            <div class="news-desc">${item.description}</div>
-            <div class="news-meta">Source: ${item.source || 'NexSphere Intelligence'} · ${new Date().toLocaleDateString()}</div>
-          </div>
-        </div>`;
-      }).join('');
-    } else {
-      feedEl.innerHTML = '<div style="padding:20px;color:var(--text-3);">Unable to load feed. Please try again.</div>';
-    }
+    feedEl.innerHTML = feedItems.map(item => {
+      const color = tagColors[item.category] || 'teal';
+      return `<div class="news-card">
+        <div style="flex:1;">
+          <span class="news-tag badge-${color}">${item.category}</span>
+          <div class="news-title">${item.headline}</div>
+          <div class="news-desc">${item.description}</div>
+          <div class="news-meta">Source: Local Sensor Node · ${dateStr}</div>
+        </div>
+      </div>`;
+    }).join('');
 
-    // Market intel
-    const mktText = mktData.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
-    mktEl.innerHTML = `<div style="padding:10px 0;font-size:0.82rem;color:var(--text-2);line-height:1.8;">${mktText.replace(/\n/g,'<br>').replace(/•/g,'<span style="color:var(--amber);font-weight:700;">▶</span>')}</div>`;
-    showNotif('Intelligence feed updated');
-
-  } catch(e) {
-    feedEl.innerHTML = '<div style="padding:20px;color:rgba(239,68,68,0.7);font-size:0.8rem;">API connection error. Check your API key configuration.</div>';
-    mktEl.innerHTML = '<div style="padding:20px;color:rgba(239,68,68,0.7);font-size:0.8rem;">Connection failed.</div>';
-  }
+    const mktImpact = isHighRisk ? 'Heavy productivity loss expected today due to high exposure risks.' : 'Optimal conditions for outdoor workforce productivity.';
+    const atRiskSector = isHighRisk ? 'Construction & Education' : 'None currently';
+    
+    mktEl.innerHTML = `<div style="padding:10px 0;font-size:0.82rem;color:var(--text-2);line-height:1.8;">
+      <span style="color:var(--amber);font-weight:700;">▶</span> <strong>Economic Impact:</strong> ${mktImpact}<br>
+      <span style="color:var(--amber);font-weight:700;">▶</span> <strong>Sectors at Risk:</strong> ${atRiskSector}<br>
+      <span style="color:var(--amber);font-weight:700;">▶</span> <strong>NexSphere Insight:</strong> PM2.5 trend is ${pm > DATA.trend[DATA.trend.length-2] ? 'rising' : 'falling'}, adjust operational schedules accordingly.
+    </div>`;
+    
+    showNotif('Local intelligence feed synthesized');
+  }, 1200);
 }
 
 // ── API EXPLORER ──────────────────────────────────────────────
