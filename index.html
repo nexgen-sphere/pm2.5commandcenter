@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NexSphere Enterprise — Air Quality Intelligence Platform</title>
+<title>Air Quality Command Center — Team NexSphere</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
@@ -84,32 +84,139 @@ body { font-family:var(--font-body); background:var(--bg-void); color:var(--text
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: #040C18; /* Locked to dark for dramatic effect */
+  background: #040C18;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
 }
 #loader-wrapper.hidden {
   opacity: 0;
-  transform: scale(1.05);
+  transform: scale(1.08);
   pointer-events: none;
 }
+
+/* Radar Background */
+.loader-radar {
+  position: absolute;
+  width: 60vw;
+  height: 60vw;
+  max-width: 800px;
+  max-height: 800px;
+  border-radius: 50%;
+  border: 1px solid rgba(14,165,233,0.05);
+  background:
+    radial-gradient(circle, rgba(14,165,233,0.03) 0%, transparent 60%),
+    repeating-radial-gradient(rgba(14,165,233,0.05) 0, rgba(14,165,233,0.05) 1px, transparent 1px, transparent 40px);
+  z-index: 0;
+  opacity: 0.6;
+  pointer-events: none;
+}
+.loader-radar::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 50%; height: 50%;
+  background: conic-gradient(from 0deg, transparent 60%, rgba(14,165,233,0.3) 100%);
+  transform-origin: 0 0;
+  animation: radar-sweep 3s linear infinite;
+  border-radius: 100% 0 0 0;
+}
+@keyframes radar-sweep { 100% { transform: rotate(360deg); } }
+
+/* Global Scanline */
+.loader-scanline {
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: rgba(14, 165, 233, 0.4);
+  box-shadow: 0 0 20px var(--teal);
+  animation: scan 4s linear infinite;
+  z-index: 10;
+  pointer-events: none;
+}
+@keyframes scan {
+  0% { top: -10%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 110%; opacity: 0; }
+}
+
+/* Telemetry HUD */
+.loader-telemetry {
+  position: absolute;
+  bottom: 40px;
+  left: 40px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--teal);
+  z-index: 5;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.loader-telemetry-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+.loader-telemetry-label {
+  color: rgba(176,199,230,0.5);
+  width: 130px;
+  letter-spacing: 0.05em;
+}
+.loader-telemetry-val {
+  color: var(--amber);
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(245,158,11,0.4);
+}
+
 .loader-content {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 340px;
+  width: 380px;
 }
+
+/* Orbital Rings around Hex */
+.loader-rings {
+  position: absolute;
+  inset: -35px;
+  border-radius: 50%;
+  border: 1px dashed rgba(14,165,233,0.3);
+  animation: spin-ring 12s linear infinite;
+}
+.loader-rings::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(245,158,11,0.15);
+  border-top-color: var(--amber);
+  animation: spin-ring 3s linear infinite reverse;
+}
+.loader-rings::after {
+  content: '';
+  position: absolute;
+  inset: -15px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  border-right-color: rgba(16,185,129,0.4);
+  animation: spin-ring 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes spin-ring { 100% { transform: rotate(360deg); } }
+
 .loader-hex {
-  width: 80px;
-  height: 80px;
+  width: 86px;
+  height: 86px;
   background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(249,115,22,0.2));
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 30px;
+  margin-bottom: 45px;
   position: relative;
   animation: pulse-hex 2s infinite alternate;
 }
@@ -126,40 +233,53 @@ body { font-family:var(--font-body); background:var(--bg-void); color:var(--text
   z-index: 2;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 32px;
+  font-size: 36px;
   background: linear-gradient(135deg, var(--amber), var(--orange));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 @keyframes pulse-hex {
-  0% { filter: drop-shadow(0 0 10px rgba(245,158,11,0.2)); transform: scale(0.95); }
-  100% { filter: drop-shadow(0 0 30px rgba(245,158,11,0.6)); transform: scale(1.05); }
+  0% { filter: drop-shadow(0 0 10px rgba(245,158,11,0.2)); transform: scale(0.98); }
+  100% { filter: drop-shadow(0 0 35px rgba(245,158,11,0.7)); transform: scale(1.05); }
 }
+
 .loader-title {
   font-family: var(--font-display);
-  font-size: 1.3rem;
+  font-size: 1.35rem;
   font-weight: 800;
   color: #F0F6FF;
-  letter-spacing: 0.15em;
-  margin-bottom: 12px;
+  letter-spacing: 0.12em;
+  margin-bottom: 24px;
   text-align: center;
   text-transform: uppercase;
 }
 .loader-title span { color: var(--amber); }
+.loader-subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: rgba(120,150,190,0.8);
+  letter-spacing: 0.25em;
+  margin-top: 10px;
+  text-shadow: 0 0 10px rgba(120,150,190,0.3);
+}
+
 .loader-terminal {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--teal);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   height: 16px;
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  text-shadow: 0 0 10px rgba(14,165,233,0.4);
+  text-shadow: 0 0 10px rgba(14,165,233,0.5);
+  transition: opacity 0.1s;
 }
+
 .loader-bar-wrap {
   width: 100%;
-  height: 4px;
+  height: 3px;
   background: rgba(255,255,255,0.06);
   border-radius: 2px;
   position: relative;
@@ -169,8 +289,8 @@ body { font-family:var(--font-body); background:var(--bg-void); color:var(--text
   position: absolute;
   top: 0; left: 0; bottom: 0;
   width: 0%;
-  background: linear-gradient(90deg, var(--teal), var(--amber));
-  box-shadow: 0 0 15px rgba(245,158,11,0.6);
+  background: linear-gradient(90deg, var(--teal), var(--amber), var(--orange));
+  box-shadow: 0 0 15px rgba(245,158,11,0.8);
   transition: width 0.1s ease-out;
 }
 .loader-footer {
@@ -179,9 +299,10 @@ body { font-family:var(--font-body); background:var(--bg-void); color:var(--text
   width: 100%;
   font-family: var(--font-mono);
   font-size: 0.65rem;
-  color: rgba(120,150,190,0.65);
+  color: rgba(120,150,190,0.5);
   margin-top: 10px;
   text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 /* BACKGROUND EFFECTS */
@@ -649,15 +770,45 @@ body::before {
 <body>
 
 <div id="loader-wrapper">
+  <div class="loader-radar"></div>
+  <div class="loader-scanline"></div>
+  
+  <div class="loader-telemetry" id="telemetry">
+     <div class="loader-telemetry-row">
+       <span class="loader-telemetry-label">SAT UPLINK</span>
+       <span class="loader-telemetry-val" id="tel-sat">CONNECTING...</span>
+     </div>
+     <div class="loader-telemetry-row">
+       <span class="loader-telemetry-label">ISB-METEO-NODE</span>
+       <span class="loader-telemetry-val" id="tel-node">SYNCING</span>
+     </div>
+     <div class="loader-telemetry-row">
+       <span class="loader-telemetry-label">ATMOSPHERE Δ</span>
+       <span class="loader-telemetry-val" id="tel-atm">CALCULATING</span>
+     </div>
+     <div class="loader-telemetry-row">
+       <span class="loader-telemetry-label">MLR CONFIDENCE</span>
+       <span class="loader-telemetry-val" id="tel-mlr">0.00%</span>
+     </div>
+  </div>
+
   <div class="loader-content">
     <div class="loader-hex">
+      <div class="loader-rings"></div>
       <div class="loader-hex-inner">N</div>
     </div>
-    <div class="loader-title">NEXSPHERE <span>OS</span></div>
-    <div class="loader-terminal" id="loader-terminal">Establishing secure uplink...</div>
+    
+    <div class="loader-title">
+      Air Quality <span>Command Center</span>
+      <div class="loader-subtitle">by Team NexSphere</div>
+    </div>
+    
+    <div class="loader-terminal" id="loader-terminal">Establishing geostationary SAT uplink...</div>
+    
     <div class="loader-bar-wrap">
       <div class="loader-bar" id="loader-bar"></div>
     </div>
+    
     <div class="loader-footer">
       <span>V2.0.4 ENTERPRISE</span>
       <span id="loader-pct">0%</span>
@@ -1615,28 +1766,47 @@ document.addEventListener('DOMContentLoaded', () => {
   const bar = document.getElementById('loader-bar');
   const pctText = document.getElementById('loader-pct');
   
+  const tSat = document.getElementById('tel-sat');
+  const tNode = document.getElementById('tel-node');
+  const tAtm = document.getElementById('tel-atm');
+  const tMlr = document.getElementById('tel-mlr');
+  
   const messages = [
-    "Establishing secure uplink...",
-    "Initializing NexSphere kernel...",
-    "Loading meteorological forecast models...",
-    "Syncing with Islamabad sensor grid...",
-    "Calibrating MLR algorithms...",
-    "Connecting to Claude AI core...",
-    "System ready. Welcome."
+    "Establishing geostationary SAT uplink...",
+    "Syncing meteorological sensor grid (ISB)...",
+    "Downloading planetary boundary layer data...",
+    "Ingesting live PM2.5 telemetry streams...",
+    "Calibrating Multiple Linear Regression models...",
+    "Applying topological wind-shear corrections...",
+    "Connecting to Claude AI intelligence core...",
+    "Finalizing dashboard projection matrices...",
+    "Air Quality Command Center ready."
   ];
   
   let progress = 0;
   let msgIndex = 0;
   
+  // Slower interval for extended ~4-5 second load time
   const interval = setInterval(() => {
-    progress += Math.random() * 8 + 1.5; 
+    progress += Math.random() * 1.5 + 0.5; // Avg 1.25 progress per tick
+    
+    // Animate telemetry randomly
+    if(Math.random() > 0.6) tSat.textContent = `LOCKED (${(Math.random() * 99).toFixed(1)}ms)`;
+    if(Math.random() > 0.7) tNode.textContent = `RECV_PKT_${Math.floor(Math.random() * 9999)}`;
+    if(Math.random() > 0.5) tAtm.textContent = `${(Math.random() * 2 - 1).toFixed(3)} hPa/s`;
+    
+    // Keep MLR tied strictly to progress
+    tMlr.textContent = `${(progress * 0.99).toFixed(2)}%`;
+    
     if (progress >= 100) {
       progress = 100;
       clearInterval(interval);
+      tMlr.textContent = "99.98% OPTIMAL";
+      
       setTimeout(() => {
         loader.classList.add('hidden');
-        setTimeout(() => loader.remove(), 800); // Wait for fade out to finish
-      }, 300);
+        setTimeout(() => loader.remove(), 1000); 
+      }, 600);
     }
     
     bar.style.width = progress + '%';
@@ -1646,8 +1816,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (expectedIndex > msgIndex && expectedIndex < messages.length) {
       msgIndex = expectedIndex;
       terminal.textContent = messages[msgIndex];
+      // Subtle terminal flicker on update
+      terminal.style.opacity = 0.4;
+      setTimeout(() => terminal.style.opacity = 1, 80);
     }
-  }, 70); 
+  }, 60); 
 });
 
 // ── DATA & STATE ──────────────────────────────────────────────
